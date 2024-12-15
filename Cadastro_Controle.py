@@ -13,55 +13,10 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS cadastros(
                )
 
 
-def view_projetos():
-    cursor.execute("SELECT * FROM cadastros")
-    todas_as_linhas = cursor.fetchall()
-    for linha in todas_as_linhas:
-        print(linha)
 
-def alterar_projeto():
-    view_projetos()  # Mostrar os projetos antes de escolher qual alterar
 
-    id_projeto = int(input("\nDigite o ID do projeto que deseja alterar: "))
-    print("O que deseja alterar?\n1 - Nome do Projeto\n2 - Previsão\n3 - Status\n4 - Prazo")
-    escolha = int(input("Digite o número da opção: "))
 
-    if escolha == 1:
-        novo_valor = input("Digite o novo nome do projeto: ")
-        coluna = "projeto"
-    elif escolha == 2:
-        novo_valor = input("Digite a nova previsão de término (DD/MM/AAAA): ")
-        coluna = "previsão"
-    elif escolha == 3:
-        novo_valor = input("Digite o novo status do projeto: ")
-        coluna = "status"
-    elif escolha == 4:
-        novo_valor = input("Digite o novo prazo (DD/MM/AAAA): ")
-        coluna = "prazo"
-    else:
-        print("Opção inválida!")
-        return
 
-    # Atualizar o registro no banco de dados
-    cursor.execute(f"UPDATE cadastros SET {coluna} = ? WHERE id = ?", (novo_valor, id_projeto))
-    conn.commit()
-    print(f"\nRegistro com ID {id_projeto} atualizado com sucesso!")
-
-# Adicionar a opção no menu principal
-print("CPFL - Controle de Projetos \n")
-print("Selecione uma opção\n")
-print("1-Cadastrar\n2-Exibir Projetos\n3-Alterar Projeto\n4-Sair")
-escolha = int(input())
-if escolha == 1:
-    cadastrar()
-elif escolha == 2:
-    view_projetos()
-elif escolha == 3:
-    alterar_projeto()
-elif escolha == 4:
-    print("Saindo...")
-else:
-    print("Opção inválida!")
 
 def janela_cadastrar():
     janela02 = tkinter.Tk()
@@ -88,27 +43,134 @@ def janela_cadastrar():
     prazo_cad = entrada(janela02, width=30, font=("Arial", 12))
     prazo_cad.grid(column=3, row=2, padx=10, pady=10)
 
-    
+    def cadastrar():
+         
+        projeto = projeto_cad.get()
+        previsao = previsao_cad.get()
+        status = status_cad.get()
+        prazo = prazo_cad.get()
+
+        if not projeto or not previsao or not status or not prazo:
+                    print("Todos os campos precisam ser preenchidos!")
+                    return
+
+        cursor.execute('''
+            INSERT INTO
+                        cadastros (projeto, previsão, status, prazo)
+            VALUES (?, ?, ?, ?)
+        ''', (projeto, previsao, status, prazo))
+            
+        conn.commit()
+        print("Cadastro Realizado com sucesso")
+
+        projeto_cad.delete(0, tkinter.END)
+        previsao_cad.delete(0, tkinter.END)
+        status_cad.delete(0, tkinter.END)
+        prazo_cad.delete(0, tkinter.END)
+
+    cadastramento = botao(janela02, text="Cadastrar", command= cadastrar)
+    cadastramento.grid(row=3, column=1, columnspan=2, pady=10)
 
 
-def cadastrar(projeto):
+def exibir_projetos():
+    cursor.execute("SELECT * FROM cadastros")
+    todas_as_linhas = cursor.fetchall()
 
-    if not projeto or not previsao or not status or not prazo:
-                print("Todos os campos precisam ser preenchidos!")
-                return
+    # Verifica se há registros suficientes para exibir
+    if len(todas_as_linhas) > 10:
+        # Pega os 5 primeiros e 5 últimos
+        linhas_para_exibir = todas_as_linhas[:5] + todas_as_linhas[-5:]
+    else:
+        # Exibe todos os registros se forem 10 ou menos
+        linhas_para_exibir = todas_as_linhas
 
-    cursor.execute('''
-        INSERT INTO
-                    cadastros (projeto, previsão, status, prazo)
-        VALUES (?, ?, ?, ?)
-    ''', (projeto, previsao, status, prazo))
-        
-    conn.commit()
-    print("Cadastro Realizado com sucesso")
+    # Cria uma nova janela para exibir os dados
+    janela_lista = tkinter.Tk()
+    janela_lista.title("Exibir Projetos")
 
-    projeto_cad.delete(0, tkinter.END)
+    titulo = tkinter.Label(janela_lista, text="Lista de Projetos", font=("Arial", 14))
+    titulo.pack(pady=10)
 
+    listbox = tkinter.Listbox(janela_lista, width=100, height=15, font=("Arial", 12))
+    listbox.pack(pady=10)
 
+    # Adiciona os registros na Listbox
+    for linha in linhas_para_exibir:
+        listbox.insert(tkinter.END, f"ID: {linha[0]} | Projeto: {linha[1]} | Previsão: {linha[2]} | Status: {linha[3]} | Prazo: {linha[4]}")
+
+    botao_fechar = tkinter.Button(janela_lista, text="Fechar", command=janela_lista.destroy)
+    botao_fechar.pack(pady=10)
+
+    janela_lista.mainloop()
+
+def alterar_projeto_tk():
+    # Criar janela para alterar projeto
+    janela_alterar = tkinter.Tk()
+    janela_alterar.title("Alterar Projeto")
+
+    # Exibir lista de projetos
+    cursor.execute("SELECT * FROM cadastros")
+    projetos = cursor.fetchall()
+
+    label_titulo = tkinter.Label(janela_alterar, text="Selecione o ID do Projeto para Alterar", font=("Arial", 14))
+    label_titulo.pack(pady=10)
+
+    listbox = tkinter.Listbox(janela_alterar, width=100, height=15, font=("Arial", 12))
+    for projeto in projetos:
+        listbox.insert(tkinter.END, f"ID: {projeto[0]} | Projeto: {projeto[1]} | Previsão: {projeto[2]} | Status: {projeto[3]} | Prazo: {projeto[4]}")
+    listbox.pack(pady=10)
+
+    label_id = tkinter.Label(janela_alterar, text="ID do Projeto:", font=("Arial", 12))
+    label_id.pack()
+    entrada_id = tkinter.Entry(janela_alterar, font=("Arial", 12))
+    entrada_id.pack(pady=5)
+
+    # Labels e Entradas para alterar informações
+    campos = ["Projeto", "Previsão", "Status", "Prazo"]
+    entradas = {}
+
+    for campo in campos:
+        label = tkinter.Label(janela_alterar, text=f"Novo {campo} (deixe vazio para não alterar):", font=("Arial", 12))
+        label.pack()
+        entrada = tkinter.Entry(janela_alterar, font=("Arial", 12))
+        entrada.pack(pady=5)
+        entradas[campo] = entrada
+
+    # Função interna para salvar alterações
+    def salvar_alteracoes():
+        try:
+            id_projeto = int(entrada_id.get())
+        except ValueError:
+            tkinter.messagebox.showerror("Erro", "Por favor, insira um ID válido.")
+            return
+
+        # Verificar se o ID existe no banco
+        cursor.execute("SELECT * FROM cadastros WHERE id = ?", (id_projeto,))
+        projeto_selecionado = cursor.fetchone()
+        if not projeto_selecionado:
+            tkinter.messagebox.showerror("Erro", "Projeto não encontrado.")
+            return
+
+        # Atualizar apenas os campos preenchidos
+        for campo, entrada in entradas.items():
+            novo_valor = entrada.get().strip()
+            if novo_valor:  # Apenas atualiza se houver valor
+                coluna = campo.lower()
+                cursor.execute(f"UPDATE cadastros SET {coluna} = ? WHERE id = ?", (novo_valor, id_projeto))
+
+        conn.commit()
+        tkinter.messagebox.showinfo("Sucesso", f"Projeto com ID {id_projeto} alterado com sucesso!")
+        janela_alterar.destroy()
+
+    # Botão para salvar alterações
+    botao_salvar = tkinter.Button(janela_alterar, text="Salvar Alterações", font=("Arial", 12), command=salvar_alteracoes)
+    botao_salvar.pack(pady=10)
+
+    # Botão para fechar a janela
+    botao_fechar = tkinter.Button(janela_alterar, text="Fechar", font=("Arial", 12), command=janela_alterar.destroy)
+    botao_fechar.pack(pady=10)
+
+    janela_alterar.mainloop()
 
 entrada = tkinter.Entry
 janela = tkinter.Tk()
@@ -122,8 +184,12 @@ titulo_principal.grid(column=1, row=0, padx=10, pady=10)
 botao_cadastrar = botao(janela, text = "Cadastrar", command=janela_cadastrar)
 botao_cadastrar.grid(column=1, row=1, padx=10, pady=10)
 
-cadastramento = botao(janela02, text="Cadastrar", command= cadastrar)
-cadastramento.grid(row=3, column=1, columnspan=2, pady=10)
+botao_exibir = botao(janela, text="Exibir Projetos", command=exibir_projetos)
+botao_exibir.grid(column=1, row=2, padx=10, pady=10)
+
+botao_alterar = botao(janela, text="Alterar Projeto", command=alterar_projeto_tk)
+botao_alterar.grid(column=1, row=3, padx=10, pady=10)
+
 
 janela.mainloop()
 
