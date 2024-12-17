@@ -76,15 +76,15 @@ def exibir_projetos():
     cursor.execute("SELECT * FROM cadastros")
     todas_as_linhas = cursor.fetchall()
 
-    # Verifica se há registros suficientes para exibir
+    
     if len(todas_as_linhas) > 10:
-        # Pega os 5 primeiros e 5 últimos
+        
         linhas_para_exibir = todas_as_linhas[:5] + todas_as_linhas[-5:]
     else:
-        # Exibe todos os registros se forem 10 ou menos
+        
         linhas_para_exibir = todas_as_linhas
 
-    # Cria uma nova janela para exibir os dados
+    
     janela_lista = tkinter.Tk()
     janela_lista.title("Exibir Projetos")
 
@@ -94,7 +94,7 @@ def exibir_projetos():
     listbox = tkinter.Listbox(janela_lista, width=100, height=15, font=("Arial", 12))
     listbox.pack(pady=10)
 
-    # Adiciona os registros na Listbox
+    
     for linha in linhas_para_exibir:
         listbox.insert(tkinter.END, f"ID: {linha[0]} | Projeto: {linha[1]} | Previsão: {linha[2]} | Status: {linha[3]} | Prazo: {linha[4]}")
 
@@ -104,11 +104,11 @@ def exibir_projetos():
     janela_lista.mainloop()
 
 def alterar_projeto_tk():
-    # Criar janela para alterar projeto
+    
     janela_alterar = tkinter.Tk()
     janela_alterar.title("Alterar Projeto")
 
-    # Exibir lista de projetos
+    
     cursor.execute("SELECT * FROM cadastros")
     projetos = cursor.fetchall()
 
@@ -125,7 +125,7 @@ def alterar_projeto_tk():
     entrada_id = tkinter.Entry(janela_alterar, font=("Arial", 12))
     entrada_id.pack(pady=5)
 
-    # Labels e Entradas para alterar informações
+    
     campos = ["Projeto", "Previsão", "Status", "Prazo"]
     entradas = {}
 
@@ -136,7 +136,7 @@ def alterar_projeto_tk():
         entrada.pack(pady=5)
         entradas[campo] = entrada
 
-    # Função interna para salvar alterações
+    
     def salvar_alteracoes():
         try:
             id_projeto = int(entrada_id.get())
@@ -144,17 +144,17 @@ def alterar_projeto_tk():
             tkinter.messagebox.showerror("Erro", "Por favor, insira um ID válido.")
             return
 
-        # Verificar se o ID existe no banco
+        
         cursor.execute("SELECT * FROM cadastros WHERE id = ?", (id_projeto,))
         projeto_selecionado = cursor.fetchone()
         if not projeto_selecionado:
             tkinter.messagebox.showerror("Erro", "Projeto não encontrado.")
             return
 
-        # Atualizar apenas os campos preenchidos
+        
         for campo, entrada in entradas.items():
             novo_valor = entrada.get().strip()
-            if novo_valor:  # Apenas atualiza se houver valor
+            if novo_valor:  
                 coluna = campo.lower()
                 cursor.execute(f"UPDATE cadastros SET {coluna} = ? WHERE id = ?", (novo_valor, id_projeto))
 
@@ -162,11 +162,11 @@ def alterar_projeto_tk():
         tkinter.messagebox.showinfo("Sucesso", f"Projeto com ID {id_projeto} alterado com sucesso!")
         janela_alterar.destroy()
 
-    # Botão para salvar alterações
+    
     botao_salvar = tkinter.Button(janela_alterar, text="Salvar Alterações", font=("Arial", 12), command=salvar_alteracoes)
     botao_salvar.pack(pady=10)
 
-    # Botão para fechar a janela
+    
     botao_fechar = tkinter.Button(janela_alterar, text="Fechar", font=("Arial", 12), command=janela_alterar.destroy)
     botao_fechar.pack(pady=10)
 
@@ -182,13 +182,13 @@ titulo_principal = label(janela, text = "GERENCIADOR DE PROJETOS", font=("Arial"
 titulo_principal.grid(column=1, row=0, padx=10, pady=10)
 
 botao_cadastrar = botao(janela, text = "Cadastrar", command=janela_cadastrar)
-botao_cadastrar.grid(column=1, row=1, padx=10, pady=10)
+botao_cadastrar.grid(column=0, row=1, padx=10, pady=10)
 
 botao_exibir = botao(janela, text="Exibir Projetos", command=exibir_projetos)
-botao_exibir.grid(column=1, row=2, padx=10, pady=10)
+botao_exibir.grid(column=1, row=1, padx=10, pady=10)
 
 botao_alterar = botao(janela, text="Alterar Projeto", command=alterar_projeto_tk)
-botao_alterar.grid(column=1, row=3, padx=10, pady=10)
+botao_alterar.grid(column=2, row=1, padx=10, pady=10)
 
 
 janela.mainloop()
